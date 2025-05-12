@@ -1,14 +1,14 @@
 “导入” CASE命令的构造
 CASE分为单纯CASE（simple case）和检索CASE（searched case）
 书写方法
-```
+```sql
 -- 単純CASE式
 CASE sex
   WHEN '1' THEN '男'
   WHEN '2' THEN '女'
  ELSE 'その他' END
 ```
-```
+```sql
 -- 検索CASE式
 CASE WHEN sex = '1' THEN '男'
      WHEN sex = '2' THEN '女'
@@ -21,7 +21,7 @@ CASE WHEN sex = '1' THEN '男'
 通常，CASE和其他命令一起使用
 
 通过code1_1创建表格PopTbl，然后通过CASE选择pref_name这一列，对里面进行分类。然后先进行求和，再通过分类输出表格。
-```
+```sql
 -- 県名を地方名に再分類する
 SELECT CASE pref_name
               WHEN '徳島' THEN '四国'
@@ -52,7 +52,7 @@ district     SUM(population)
 四国         650
 ```
 第二种写法
-```
+```sql
 SELECT CASE pref_name
               WHEN '徳島' THEN '四国'
               WHEN '香川' THEN '四国'
@@ -71,7 +71,7 @@ SELECT CASE pref_name
 
 PopTbl2进行各地性别人口分类
 使用case命令简化
-```
+```sql
 SELECT pref_name,
        -- 男性の人口
        SUM( CASE WHEN sex = '1' THEN population ELSE 0 END)   --sum求和，当sex这一列为1的进行求和，population进行求和
@@ -87,7 +87,7 @@ AS 女性
 
 不同条件下进行update
 先创建名为Salaries的表
-```
+```sql
 CREATE TABLE Salaries
 (name varchar(10) PRIMARY KEY,
 salary int
@@ -112,7 +112,7 @@ INSERT INTO Salaries VALUES ('斉藤', 290000);
 工资大于等于25万小于等于28万的，增加20%
 
 如果如下写的话
-```
+```sql
 -- 条件1
  UPDATE Personnel
  SET salary = salary * 0.9
@@ -133,7 +133,7 @@ INSERT INTO Salaries VALUES ('斉藤', 290000);
 相田那行计算错误，因为先执行了300000x0.9，然后又执行了x1.2
 
 正确执行如下
-```
+```sql
 UPDATE Salaries
  SET salary = CASE WHEN salary >= 300000
  THEN salary * 0.9
@@ -143,7 +143,7 @@ UPDATE Salaries
 ```
 注意：最后的 ELSE salary非常重要。默认ELSE NULL。如果不写的话，那会不满足条件1或2的人直接输出NULL 空值。
 可以通过这个方法通过一次UPDATE多个主key，避免多次写入。
-```
+```sql
 UPDATE SomeTable
    SET p_key = CASE WHEN p_key = 'a'
                     THEN 'b'
@@ -157,7 +157,7 @@ UPDATE SomeTable
 
 表格之间对比
 创建CourseMaster和OpenCourses表，整理每个月需要开设的讲座
-```
+```sql
 -- テーブルのマッチング：EXISTS述語の利用
 SELECT CM.course_name,
        CASE WHEN EXISTS   -- 当存在时
@@ -183,7 +183,7 @@ SELECT CM.course_name,
 要求
 1，只属于1个俱乐部的学生，导出其所属的俱乐部ID
 2，对于属于多个俱乐部的学生，导出其主要俱乐部ID
-```
+```sql
 SELECT std_id,
        CASE WHEN COUNT(*) = 1  -- 1つのクラブに専念する学生の場合
             THEN MAX(club_id)
@@ -197,7 +197,7 @@ SELECT std_id,
 
 练习题
 1，提取出多个列中的最大值
-```
+```sql
 -- xとyとzの最大値
 SELECT key,
        CASE WHEN CASE WHEN x < y THEN y ELSE x END < z
@@ -207,7 +207,7 @@ SELECT key,
   FROM Greatests;
 ```
 还有一种写法
-```
+```sql
 -- 提取每个 key 的最大值（无 GREATEST 函数）
 SELECT 
     key,
@@ -218,12 +218,12 @@ SELECT
     END AS 最大值
 FROM Greatests;
 
---如果有GREATEST函数的话
+-- 如果有GREATEST函数的话
 SELECT key, GREATEST(GREATEST(x,y), z) AS greatest
  FROM Greatests;
 ```
 2.求和并修改行名输出
-```
+```sql
 SELECT sex,
        SUM(population) AS total,
        SUM(CASE WHEN pref_name = '徳島' 
@@ -263,7 +263,7 @@ topN问题：找出每个部门排名前N的员工进行奖励
 累计问题：医院要经常统计累计患者数  
 
 例子：求商品的移动平均 表为Shohin
-```
+```sql
 SELECT shohin_id, shohin_mei, hanbai_tanka,
        AVG (hanbai_tanka) OVER (ORDER BY shohin_id                         
                                 ROWS BETWEEN 2 PRECEDING                   
@@ -290,7 +290,7 @@ https://zhuanlan.zhihu.com/p/151786842
 https://www.srush.co.jp/blog/1014712986
 
 也可以这么写，更明确的显示window定义
-```
+```sql
 SELECT shohin_id, shohin_mei, hanbai_tanka,
        AVG(hanbai_tanka) OVER W AS moving_avg
   FROM Shohin
@@ -320,7 +320,7 @@ ROWS BETWEEN 2 PRECEDING AND CURRENT ROW：定义窗口范围为当前行及其�
 计算移动平均值：在窗口范围内，计算 hanbai_tanka 的平均值。  
 
 命名的window函数，可以重复使用window  
-```
+```sql
 SELECT 
     shohin_id, 
     shohin_mei, 
@@ -348,6 +348,16 @@ feame语句的原理是cursor（游标）
 可以参考 https://www.cnblogs.com/xiongzaiqiren/p/sql-cursor.html
 
 使用feame语句把其他行的数据拿到自己的行中  
+LoadSample表  
+| <ins>sample_date</ins> | load_val | 
+| --- | --- |
+| 2018-02-01 | 1024 |
+| 2018-02-02 | 2366 |
+| 2018-02-05 | 2366 |
+| 2018-02-07 | 985 |
+| 2018-02-08 | 780 |
+| 2018-02-12 | 1000 |
+
 例1，求最近的日期  
 ```
 SELECT 
@@ -399,7 +409,7 @@ FROM LoadSample：
 
 接下来不仅要输出日期，也要输出出货量，有2种写法  
 写法一：  
-```
+```sql
 SELECT sample_date AS cur_date,
        load_val AS cur_load,
        MIN(sample_date)
@@ -414,7 +424,7 @@ AS latest_load
 ```
 通过相同的window重复使用。接下来，把它们整合在一起
 
-```
+```sql
 SELECT sample_date AS cur_date,
        load_val    AS cur_load,
        MIN(sample_date) OVER W AS latest_date,
@@ -424,5 +434,230 @@ SELECT sample_date AS cur_date,
               ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING);
 ```
 
+Q1 feame可以不仅向前，也可以“向后”吗？
 
+答：可以的。这个情况下使用FOLLOWING这个keyword。比如，最近的日期，往后一行。
+
+```sql
+SELECT sample_date AS cur_date,
+       load_val    AS cur_load,
+       MIN(sample_date) OVER W AS next_date,
+       MIN(load_val)    OVER W AS next_load
+  FROM LoadSample
+ WINDOW W AS (ORDER BY sample_date ASC
+              ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING);
+```
+
+输出结果
+
+| cur_date   | cur_load | next_date  | next_load |
+| ---------- | -------- | ---------- | --------- |
+| 2018-02-01 | 1024     | 2018-02-02 | 2366      |
+| 2018-02-02 | 2366     | 2018-02-05 | 2366      |
+| 2018-02-05 | 2366     | 2018-02-07 | 985       |
+| 2018-02-07 | 985      | 2018-02-08 | 780       |
+| 2018-02-08 | 780      | 2018-02-12 | 1000      |
+| 2018-02-12 | 1000     |            |           |
+
+这次是把next_date和next_load列中，表示后面那一列数据。
+
+还有，PRECEDING和FOLLOWING合并使用，表示“前后N行”的设置。
+
+
+
+Q2 使用了MIN函数，这个是什么意思？
+
+答：在这个例子中，feame（游标）的范围限定在1行的情况下，用MIN没有特别的意义。用MAX，AVG和SUM结果也是一样的。只有当feame的范围超过1行时，使用集约函数的本来意思会有作用。
+
+```sql
+-- これでも結果はMINと同じ
+SELECT sample_date AS cur_date,
+       load_val    AS cur_load,
+       MAX(sample_date) OVER W AS latest_date,
+       MAX(load_val)    OVER W AS latest_load
+  FROM LoadSample
+ WINDOW W AS (ORDER BY sample_date ASC
+              ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING);
+```
+
+
+
+Q3 不是行而是基于“1天前”或“2天前”的列的数值进行feame设定，可以吗？
+
+答：可以的。这个情况下用RANGE代替ROWS。
+
+```sql
+SELECT sample_date AS cur_date,
+	load_val AS cur_load,
+	MIN(sample_date)
+		OVER (ORDER BY sample_date ASC
+			RANGE BETWEEN interval '1' day PRECEDING
+		  AND interval '1' day PRECEDING
+			) AS day1_before,
+		MIN(load_val)
+			OVER (ORDER BY sample_date ASC
+				RANGE BETWEEN interval '1' day PRECEDING
+					AND interval '1' day PRECEDING
+				) AS load_day1_before
+FROM LoadSample;
+
+```
+
+输出结果
+
+| cur_date | cur_load | day1_before | load_day1_before |
+| -------- | -------- | ----------- | ---------------- |
+| 18-02-01 | 1024     |             |                  |
+| 18-02-02 | 2366     | 18-02-01    | 1024             |
+| 18-02-05 | 2366     |             |                  |
+| 18-02-07 | 985      |             |                  |
+| 18-02-08 | 780      | 18-02-07    | 985              |
+| 18-02-12 | 1000     |             |                  |
+
+由于表格LoadSample的数据不是连续的，在1天前的数据不存在的情况下，day1_before和load_day1_before的列表示空值NULL。
+
+最后总结feame语句如下
+
+●ROWS：设定行的移动单位
+
+●RANGE：设定列的移动单位。由ORDER BY指定的列作为基准
+
+●n PRECENDING：向前移动n行（往小的方向移动）。n为正整数
+
+●n FOLLOWING：向后移动n行（往大的方向移动）。n为正整数
+
+●UNBOUNDED FOLLOWING：无限向上移动。从分区的第一行开始，进行累计计算。例如累计和、累计平均值等。
+
+●UNBOUNDED FOLLOWING：无限向下移动。通常用于从当前行到分区末尾的计算，例如剩余总和、剩余平均值等。
+
+●CURRENT ROW：现在行
+
+行间比较的一般化
+
+要求：扩大比较范围，从“最近的1天”到“再前1天”到“再前2天”。一直到“前n天”
+
+```sql
+SELECT sample_date AS cur_date,
+	MIN(sample_date)
+	  OVER (ORDER BY sample_date ASC
+		ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING)
+AS latest_1,
+	MIN(sample_date)
+	  OVER (ORDER BY sample_date ASC
+		ROWS BETWEEN 2 PRECEDING AND 2 PRECEDING)
+AS latest_2,
+	MIN(sample_date)
+	  OVER (ORDER BY sample_date ASC
+		ROWS BETWEEN 3 PRECEDING AND 3 PRECEDING)
+AS latest_3
+ FROM LoadSample;
+```
+
+通过BETWEEN来指定“前1行”“前2行”“前3行”。可以通过这个方法进行扩展到n行。
+
+window函数的实际是sort（种类，分类）
+
+总结 まとめ
+
+1.window函数的“window”，（原则上有顺序）意为“范围”
+
+2.在window函数的构造中，PARTITION BY语句和ORDER BY语句虽然是有特征的行的集合，但是于通常使用简化的语法，反而难以意识到window窗口的存在。
+
+3.PARTITON BY语句是GROUP BY从子句中减去聚合功能，只保留剪切功能ORDER BY子句对记录进行排序。
+
+4.feame语句将光标的功能SQL的语法，可以定义以“当前记录”为中心的记录集合的范围
+
+5.使用feame语句，可以把不同行的数据拿到同一行中，简化了行之间的比较。
+
+6.关于window函数的内部运行，目前还是把行进行分类。未来有可能采用哈希hash。
+
+练习问题
+
+练习表格ServerLoadSample
+
+| sever(サーバ) | sample_date(計測日) | load_val(負荷量) |
+| ------------- | ------------------- | ---------------- |
+| A             | 2018-02-01          | 1024             |
+| A             | 2018-02-02          | 2366             |
+| A             | 2018-02-05          | 2366             |
+| A             | 2018-02-07          | 985              |
+| A             | 2018-02-08          | 780              |
+| A             | 2018-02-12          | 1000             |
+| B             | 2018-02-01          | 54               |
+| B             | 2018-02-02          | 39008            |
+| B             | 2018-02-03          | 2900             |
+| B             | 2018-02-04          | 556              |
+| B             | 2018-02-05          | 12600            |
+| B             | 2018-02-06          | 7309             |
+| C             | 2018-02-01          | 1000             |
+| C             | 2018-02-07          | 2000             |
+| C             | 2018-02-16          | 500              |
+
+1.预测输出结果
+
+```sql
+SELECT server, sample_date,
+SUM(load_val) OVER () AS sum_load
+ FROM ServerLoadSample;
+```
+
+结果如下表
+
+| server | sample_date | sum_load |
+| ------ | ----------- | -------- |
+| A      | 2018-02-01  | 74448    |
+| A      | 2018-02-02  | 74448    |
+| A      | 2018-02-05  | 74448    |
+| A      | 2018-02-07  | 74448    |
+| A      | 2018-02-08  | 74448    |
+| A      | 2018-02-12  | 74448    |
+| B      | 2018-02-01  | 74448    |
+| B      | 2018-02-02  | 74448    |
+| B      | 2018-02-03  | 74448    |
+| B      | 2018-02-04  | 74448    |
+| B      | 2018-02-05  | 74448    |
+| B      | 2018-02-06  | 74448    |
+| C      | 2018-02-01  | 74448    |
+| C      | 2018-02-07  | 74448    |
+| C      | 2018-02-16  | 74448    |
+
+sum_load这一列，都是74448。原因是，load_val下行的值全部求和。因为没有PARTITION BY语句，整个window被当成一个大隔板（partition）。这个和没有GROUP BY约束的集约函数的情况类似，整个表格作为1个大组进行处理。
+
+还有，window函数中没有ORDER BY语句，没法对行进行排序进行累计计算。所以，sum_load的行就是整个求和的值。
+
+2.预测输出结果
+
+```sql
+SELECT server, sample_date,
+ SUM(load_val) OVER (PARTITION BY server) AS sum_load
+ FROM ServerLoadSample;
+```
+
+这次加了PATITION BY 语句，想一下结果会有什么变化。
+
+结果如下表
+
+| server | sample_date | sum_load |
+| ------ | ----------- | -------- |
+| A      | 2018-02-01  | 8521     |
+| A      | 2018-02-02  | 8521     |
+| A      | 2018-02-05  | 8521     |
+| A      | 2018-02-07  | 8521     |
+| A      | 2018-02-08  | 8521     |
+| A      | 2018-02-12  | 8521     |
+| B      | 2018-02-01  | 62427    |
+| B      | 2018-02-02  | 62427    |
+| B      | 2018-02-03  | 62427    |
+| B      | 2018-02-04  | 62427    |
+| B      | 2018-02-05  | 62427    |
+| B      | 2018-02-06  | 62427    |
+| C      | 2018-02-01  | 3500     |
+| C      | 2018-02-07  | 3500     |
+| C      | 2018-02-16  | 3500     |
+
+因为添加了PATITION BY语句，通过sever这一部分进行区分，然后运行SUM函数。可是依然没有ORDER BY，只是对区分部分进行约束。就成了计算sever的负担量的合计。
+
+
+
+self join的使用方法
 
